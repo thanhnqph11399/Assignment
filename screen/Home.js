@@ -10,43 +10,104 @@ import {
   Image,
   ImageBackground,
 } from "react-native";
-import MasonryList from "@appandflow/masonry-list";
+import firebase from "firebase/app";
+import "firebase/auth";
+import "firebase/database";
+import "firebase/functions";
+import "firebase/storage";
+import "firebase/firestore";
 
 
 export default function Home({ navigation }) {
-  const duLieu = [
-    { name: "https://i.pinimg.com/564x/59/a4/c4/59a4c4ee5defe549877f6a88b5f77fe8.jpg", idName: 1 },
-    { name: "https://i.pinimg.com/236x/74/ae/89/74ae89d90826fd4dd6936727eb0bd2a7.jpg", idName: 2 },
-    { name: "https://i.pinimg.com/564x/34/d2/6c/34d26ceb8747d157c3bc47177a05c4fb.jpg", idName: 5 },
-    { name: "https://i.pinimg.com/236x/bb/43/52/bb435210cc24092341522f12de4c5b8b.jpg", idName: 3 },
-    { name: "https://i.pinimg.com/236x/40/fe/24/40fe24e9e802623d403b8c78a9b8a555.jpg", idName: 4 },
+  const [duLieu,setDuLieu]=useState([]);
 
-  ];
+  useEffect(() => {
+    var firebaseConfig = {
+      apiKey: "AIzaSyCtYxys0SZCR42KzMug4LjGsC65cc1vaNM",
+      authDomain: "demoreact-ae3d3.firebaseapp.com",
+      databaseURL: "https://demoreact-ae3d3-default-rtdb.firebaseio.com",
+      projectId: "demoreact-ae3d3",
+      storageBucket: "demoreact-ae3d3.appspot.com",
+      messagingSenderId: "738520764683",
+      appId: "1:738520764683:web:91e8ddada7a712ef70d20e",
+      measurementId: "G-F4V87W74FK",
+    };
+    if (!firebase.apps.length){
+      firebase.initializeApp(firebaseConfig);
+      console.log("Kết nối Firebase thành công!")
+    }
+
+    getData();
+  }, []);
+
+  function addData(imageId, name,views) {
+    firebase.database().ref('images/'+imageId).set({
+      Name : name,
+      Views : views,
+    }, function(error) {
+      if (error) {
+        // The write failed...
+        alert('Loi')
+      } else {
+        // Data saved successfully!
+        alert('Thanh cong!!!')
+      }
+    });
+  }
+
+  function getData() {
+    firebase.database().ref("images/").on("value", function(snapshot) {
+      let array = [];
+      snapshot.forEach(function(childSnapshot) {
+        var childData = childSnapshot.val();
+        array.push({
+          id: childSnapshot.key,
+          Name: childData.Name ,
+          Views: childData.Views,
+        });
+      });
+      setDuLieu(array);
+    });
+  }
 
   const numColumns = 2;
 
   const randomBool = useMemo(() => Math.random() < 0.5, []);
-  return (
-    <View style={{ flex: 1 }}>
 
-      {/*<Image source={{uri:duLieu[0].name}} style={{width: '50%',height:'50%'}}/>*/}
-      <MasonryList
-        data={duLieu}
-                   getHeightForItem={(item)=>item.maxHeight+2}
-                   numColumns={numColumns}
-                   keyExtractor={(item, index) => index.toString()}
-                   renderItem={({ item }) =>
-                     <View style={styles.itemStyle} resizeMode="stretch">
-                       <ImageBackground source={{ uri: item.name }} resizeMode="cover"
-                                        style={{
-                                          height: randomBool ? 150 : 280,
-                                          width: "100%",
-                                          alignSelf: "stretch",
-                                          borderWidth: 2,
-                                        }}>
-                         <Text style={styles.textItem}>{item.idName}</Text>
-                       </ImageBackground>
-                     </View>} />
+  const formatData = (duLieu, numColumns) => {
+    let totalRows = duLieu.length % numColumns;
+    console.log("" + totalRows);
+
+    while (totalRows !== 0 && totalRows !== numColumns) {
+      duLieu.push({ key: "blank", empty: true });
+      totalRows++;
+    }
+    return duLieu;
+
+  };
+  return (
+    <View style={{ flex: 1, backgroundColor: "#212020" }}>
+      <FlatList
+        data={formatData(duLieu, numColumns)}
+        numColumns={numColumns}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) =>
+          <TouchableOpacity
+            style={styles.itemStyle}
+            resizeMode="stretch"
+            onPress={() => {
+              navigation.navigate("Item", { data: item.Name });
+            }}>
+            <ImageBackground source={{ uri: item.Name }} resizeMode="cover"
+                             borderRadius={10}
+                             style={{
+                               height: randomBool ? 220 : 350,
+                               width: "100%",
+                               alignSelf: "stretch",borderRadius:5
+                             }}>
+              <Text style={styles.viewItem}>{item.Views}   views</Text>
+            </ImageBackground>
+          </TouchableOpacity>} />
 
     </View>
   );
@@ -54,25 +115,23 @@ export default function Home({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    width: 300,
-    minHeight: 100,
-    borderWidth: 1,
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   itemStyle: {
-    height: 100,
+    position:'relative',
     flex: 1,
-    backgroundColor: "blue",
     margin: 1,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: 20,
+    padding: 2,
+    marginTop:10
   },
   textItem: {
     color: "#fff",
     fontSize: 20,
   },
+  viewItem:{
+    position: 'absolute',
+    bottom:5,
+    left:10
+  }
 });

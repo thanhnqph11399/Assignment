@@ -76,7 +76,7 @@ const App: () => Node = () => {
       <Stack.Navigator>
         <Stack.Screen name={"Hello"} component={Splash} options={{ headerShown: false }} />
         <Stack.Screen name={"Home"} component={Home} options={{ title: "HomeScreen" }} />
-        <Stack.Screen name={"Item"} component={Item} options={{ title: "Item Image" }} />
+        <Stack.Screen name={"Item"} component={Item} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
